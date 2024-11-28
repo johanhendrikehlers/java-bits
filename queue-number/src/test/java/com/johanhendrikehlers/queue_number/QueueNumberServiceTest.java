@@ -1,7 +1,9 @@
 package com.johanhendrikehlers.queue_number;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
+import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -19,24 +21,36 @@ class QueueNumberServiceTest {
 	public final static int TOTAL_USERS = 100_000_000;
 
 	@Test
-	void testBlocking() {
-		System.out.println("Blocking");
+	void testBlockingUsingSynchronized() {
+		System.out.println("Blocking (Synchronized)");
 		System.out.println("BatchSize, Time");
 		int batchSize = 1;
 		while (batchSize <= 100_000) {
-			QueueNumberService service = new QueueNumberServiceBlocking();
+			QueueNumberService service = new QueueNumberServiceSynchronized();
 			testForGaps(8, batchSize, service);
 			batchSize *= 10;
 		}
 	}
 
 	@Test
-	void testNonBlocking() {
-		System.out.println("Non Blocking");
+	void testNonBlockingUsingAtomic() {
+		System.out.println("Non Blocking (Atomic)");
 		System.out.println("BatchSize, Time");
 		int batchSize = 1;
 		while (batchSize <= 100_000) {
-			QueueNumberService service = new QueueNumberServiceNonBlocking();
+			QueueNumberService service = new QueueNumberServiceAtomic();
+			testForGaps(8, batchSize, service);
+			batchSize *= 10;
+		}
+	}
+
+	@Test
+	void testNonBlockingUsingVarHandle() {
+		System.out.println("Non Blocking (VarHandle)");
+		System.out.println("BatchSize, Time");
+		int batchSize = 1;
+		while (batchSize <= 100_000) {
+			QueueNumberService service = new QueueNumberServiceVarHandle();
 			testForGaps(8, batchSize, service);
 			batchSize *= 10;
 		}
@@ -84,6 +98,20 @@ class QueueNumberServiceTest {
 			}
 		}
 		assertTrue(gaps == 0, "There are " + gaps + " gaps in the sequence.");
+
+		// check for repeating counter numbers
+		int[] counts = new int[TOTAL_USERS];
+		for (int i = 0; i < users.length; i++) {
+			var qn = users[i];
+			var ii = qn - 1;
+			if (ii < 0 || ii > TOTAL_USERS) {
+				fail("The queue number is out of bounds");
+			}
+			counts[ii] += 1;
+			if (counts[ii] > 1) {
+				fail("The queue number " + qn + " was issued multiple times.");
+			}
+		}
 
 		// print csv result
 		System.out.println(batchSize + ", " + (end - start));

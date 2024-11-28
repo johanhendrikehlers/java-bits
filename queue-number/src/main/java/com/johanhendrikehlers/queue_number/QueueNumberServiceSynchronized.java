@@ -6,7 +6,7 @@ package com.johanhendrikehlers.queue_number;
  * @author Johan Hendrik Ehlers
  * @since 2024-09-04
  */
-public class QueueNumberServiceBlocking implements QueueNumberService {
+public class QueueNumberServiceSynchronized implements QueueNumberService {
 
 	private int count = 0;
 

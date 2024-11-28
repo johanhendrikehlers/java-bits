@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author Johan Hendrik Ehlers
  * @since 2024-09-04
  */
-public class QueueNumberServiceNonBlocking implements QueueNumberService {
+public class QueueNumberServiceAtomic implements QueueNumberService {
 
 	private AtomicInteger count = new AtomicInteger(0);
 
